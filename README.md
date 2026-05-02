@@ -13,6 +13,15 @@ The goal is to build a real-time gesture recognition system that allows users to
 
 ---
 
+## 📊 Model Results
+
+Trained models and their corresponding results are organized under the `results/` directory.  
+Each version includes evaluation metrics and visualizations such as accuracy, loss, and confusion matrix.
+
+---
+
+## Açıklama
+
 Bu proje şu anda geliştirme aşamasındadır.
 
 Bu proje, kameradan alınan görüntülerdeki el hareketlerini algılayarak bir medya oynatıcıyı kontrol etmeyi amaçlamaktadır.  
@@ -22,40 +31,7 @@ Amaç, kullanıcıların klavye veya fare kullanmadan medya oynatıcıyı el har
 
 ---
 
-## 🚀 Current Progress / Mevcut İlerleme
+## 📊 Model Sonuçları
 
-The project is actively under development. Since the initial version, significant progress has been made.
-
-- Hand landmark extraction implemented using MediaPipe  
-- Dataset created and organized  
-- An initial LSTM model has been successfully trained  
-- Model performance has been evaluated  
-
----
-
-Proje aktif olarak geliştirilmeye devam etmektedir. İlk versiyondan bu yana önemli ilerlemeler kaydedilmiştir.
-
-- MediaPipe ile el landmark çıkarımı gerçekleştirildi  
-- Veri seti oluşturuldu ve düzenlendi  
-- İlk LSTM modeli başarıyla eğitildi  
-- Model performansı analiz edildi  
-
----
-
-## 📊 Model Results / Model Sonuçları
-
-### Accuracy Graph
-![Accuracy](results/accuracy.png)
-
-### Loss Graph
-![Loss](results/loss.png)
-
-### Confusion Matrix
-![Confusion Matrix](results/confusion_matrix.png)
-
----
-
-## 🔄 Status
-
-This project is under active development and will continue to evolve.  
-Proje aktif olarak geliştirilmeye devam etmektedir.
+Eğitilen modeller ve elde edilen sonuçlar `results/` klasörü altında versiyonlanmış şekilde paylaşılmaktadır.  
+Her versiyon, performans metrikleri ve accuracy, loss ve confusion matrix gibi görselleştirmeleri içermektedir.
