@@ -15,28 +15,29 @@ mp_hands = mp.solutions.hands
 hands = mp_hands.Hands(max_num_hands=1)
 mp_draw = mp.solutions.drawing_utils
 
-sequence = [] #son 40 frame tutar
+sequence = []
 last_action_time = 0
-cooldown = 1.0 #1 saniye bekleme süresi => aynı hareketi tetiklememek için
+cooldown = 1.0
 
-# mediapipe çıktısından sayısal veri üretir
+
 def extract_landmarks(results):
     if results.multi_hand_landmarks:
-        hand = results.multi_hand_landmarks[0] #ilk eli al
+        hand = results.multi_hand_landmarks[0]
         landmarks = []
 
-        wrist = hand.landmark[0] #bilek referans noktası
+        wrist = hand.landmark[0]
 
         for lm in hand.landmark:
-            landmarks.extend([ #normalizasyon = elin konumu değil hareketi
+            landmarks.extend([
                 lm.x - wrist.x,
                 lm.y - wrist.y,
                 lm.z - wrist.z
             ])
 
-        return np.array(landmarks) #array döner
+        return np.array(landmarks)
 
-    return np.zeros(63)  #el yoksa boş
+    return np.zeros(63)
+
 
 cap = cv2.VideoCapture(0)
 
@@ -47,17 +48,19 @@ while True:
         print("Kamera hatası")
         break
 
+    display_text = "none"
+    color = (0, 0, 255)
+
     image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     results = hands.process(image)
 
     landmarks = extract_landmarks(results)
 
-    sequence.append(landmarks) #son 40 frame tut
-    sequence = sequence[-sequence_length:] #eskileri sil
+    sequence.append(landmarks)
+    sequence = sequence[-sequence_length:]
 
     image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
 
-    # Landmark çiz
     if results.multi_hand_landmarks:
         for hand_landmarks in results.multi_hand_landmarks:
             mp_draw.draw_landmarks(
@@ -66,31 +69,35 @@ while True:
                 mp_hands.HAND_CONNECTIONS
             )
 
-    if len(sequence) == sequence_length:
-        input_data = np.expand_dims(sequence, axis=0).astype(np.float32)
+        if len(sequence) == sequence_length:
+            input_data = np.expand_dims(sequence, axis=0).astype(np.float32)
 
-        output = infer(tf.constant(input_data))
-        prediction = list(output.values())[0].numpy()[0]
+            output = infer(tf.constant(input_data))
+            prediction = list(output.values())[0].numpy()[0]
 
-        predicted_index = np.argmax(prediction)
-        confidence = prediction[predicted_index]
-        predicted_action = actions[predicted_index]
+            predicted_index = np.argmax(prediction)
+            confidence = prediction[predicted_index]
+            predicted_action = actions[predicted_index]
 
-        cv2.putText(
-            image,
-            f"{predicted_action} ({confidence:.2f})",
-            (10, 40),
-            cv2.FONT_HERSHEY_SIMPLEX,
-            1,
-            (0, 255, 0),
-            2
-        )
+            if confidence > threshold:
+                display_text = f"{predicted_action} ({confidence:.2f})"
+                color = (0, 255, 0)
 
-        current_time = time.time()
+                current_time = time.time()
 
-        if confidence > threshold and current_time - last_action_time > cooldown:
-            print(f"Tahmin: {predicted_action} | Guven: {confidence:.2f}")
-            last_action_time = current_time
+                if current_time - last_action_time > cooldown:
+                    print(f"Tahmin: {predicted_action} | Guven: {confidence:.2f}")
+                    last_action_time = current_time
+
+    cv2.putText(
+        image,
+        display_text,
+        (10, 40),
+        cv2.FONT_HERSHEY_SIMPLEX,
+        1,
+        color,
+        2
+    )
 
     cv2.imshow("Gesture Control", image)
 
