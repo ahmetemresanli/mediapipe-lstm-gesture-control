@@ -35,4 +35,16 @@ Parametre sayısı yaklaşık **72.000’den 22.000’e düşürülerek** model 
 - Veri setine sol el verileri eklendi  
 - Her sınıf için 100 örnek olacak şekilde veri seti genişletildi  
 - Model parametre sayısı azaltıldı (~72K → ~22K)  
-- Verimlilik ve genelleme yeteneği artırıldı  
+- Verimlilik ve genelleme yeteneği artırıldı
+
+## 📊 Results
+
+### Accuracy
+![Accuracy](accuracy.png)
+
+### Loss
+![Loss](loss.png)
+
+### Confusion Matrix
+![Confusion Matrix](confusion_matrix.png)
+

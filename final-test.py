@@ -3,10 +3,14 @@ import mediapipe as mp
 import numpy as np
 import tensorflow as tf
 import time
+import pyautogui
 
 actions = ["play_pause", "volume_up", "volume_down", "next", "previous", "full_screen"]
+
 sequence_length = 40
 threshold = 0.95
+cooldown = 2 # aynı hareketin sürekli tetiklenmesini engellemek için 2 saniyelik bekleme süresi
+
 
 model = tf.saved_model.load("model/gesture_saved_model")
 infer = model.signatures["serving_default"]
@@ -17,7 +21,6 @@ mp_draw = mp.solutions.drawing_utils
 
 sequence = []
 last_action_time = 0
-cooldown = 1.0
 
 
 def extract_landmarks(results):
@@ -39,6 +42,27 @@ def extract_landmarks(results):
     return np.zeros(63)
 
 
+def control_media(action):
+    if action == "play_pause":
+        pyautogui.press("space")
+
+    elif action == "volume_up":
+        pyautogui.press("volumeup")
+
+    elif action == "volume_down":
+        pyautogui.press("volumedown")
+
+    elif action == "next":
+        pyautogui.hotkey("ctrl", "right")
+
+    elif action == "previous":
+        pyautogui.hotkey("ctrl", "left")
+
+
+    elif action == "full_screen":
+        pyautogui.press("f11")
+
+
 cap = cv2.VideoCapture(0)
 
 while True:
@@ -54,10 +78,18 @@ while True:
     image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     results = hands.process(image)
 
-    landmarks = extract_landmarks(results)
+    # eğer el algılandıysa landmark çıkarılır ve sequence'e eklenir
+    # eğer el algılanmadıysa sequence temizlenir
+    # böylece el kameradan çıkınca eski hareket verileri kalmaz
+    if results.multi_hand_landmarks:
+        landmarks = extract_landmarks(results)
 
-    sequence.append(landmarks)
-    sequence = sequence[-sequence_length:]
+        sequence.append(landmarks)
+        sequence = sequence[-sequence_length:]
+    else:
+        sequence = []
+        display_text = "none"
+        color = (0, 0, 255)
 
     image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
 
@@ -69,7 +101,16 @@ while True:
                 mp_hands.HAND_CONNECTIONS
             )
 
-        if len(sequence) == sequence_length:
+        # 40 frame henüz dolmadıysa sistemin hazırlanma aşamasında olduğunu gösterir
+        if len(sequence) < sequence_length:
+            display_text = f"Hazirlaniyor... {len(sequence)}/{sequence_length}"
+            color = (0, 255, 255)
+
+        # 40 frame dolduysa model artık tahmin yapmaya hazırdır
+        elif len(sequence) == sequence_length:
+            display_text = "Hazir"
+            color = (255, 255, 0)
+
             input_data = np.expand_dims(sequence, axis=0).astype(np.float32)
 
             output = infer(tf.constant(input_data))
@@ -87,7 +128,12 @@ while True:
 
                 if current_time - last_action_time > cooldown:
                     print(f"Tahmin: {predicted_action} | Guven: {confidence:.2f}")
+
+                    control_media(predicted_action)
+
                     last_action_time = current_time
+
+                    sequence = []
 
     cv2.putText(
         image,
